@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task List</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 600px;
+      max-width: 90%;
+      height: 500px;
+      background: black;
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    .task {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #444;
+    }
+
+    .task.completed span {
+      color: #00ff00;
+    }
+
+    .task:not(.completed) span {
+      color: orange;
+    }
+
+    button {
+      margin-left: 5px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .complete-btn {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .complete-btn:hover {
+      background-color: #059669;
+    }
+
+    .delete-btn {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .delete-btn:hover {
+      background-color: #dc2626;
+    }
+
+    #newTaskInput {
+      width: 70%;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background-color: #222;
+      color: white;
+    }
+
+    #addTaskBtn {
+      padding: 10px 16px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.2s ease;
+    }
+
+    #addTaskBtn:hover {
+      background-color: #2563eb;
+    }
+
+    .input-group, .filter-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .filter-group button {
+      padding: 10px 14px;
+      border-radius: 5px;
+      margin: 0 3px;
+      transition: all 0.3s ease;
+      background-color: white;
+      color: black;
+      font-weight: bold;
+    }
+
+    .filter-group button.active[data-filter="all"] {
+      background-color: #1e3a8a;
+      color: white;
+      font-weight: normal;
+    }
+
+    .filter-group button.active[data-filter="pending"] {
+      background-color: orange;
+      color: white;
+      font-weight: normal;
+    }
+
+    .filter-group button.active[data-filter="completed"] {
+      background-color: #00ff00;
+      color: black;
+      font-weight: normal;
+    }
+
+    .error {
+      color: #f87171;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+
+    #taskList {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="container">
+    <h1>Task List</h1>
+
+    <div class="input-group">
+      <input type="text" id="newTaskInput" placeholder="Enter a new task">
+      <button id="addTaskBtn">Add</button>
+    </div>
+
+    <div class="error" id="errorMsg"></div>
+
+    <div class="filter-group">
+      <button onclick="setFilter('all')" class="filter-btn active" data-filter="all">All</button>
+      <button onclick="setFilter('pending')" class="filter-btn" data-filter="pending">Pending</button>
+      <button onclick="setFilter('completed')" class="filter-btn" data-filter="completed">Completed</button>
+    </div>
+
+    <div id="taskList"></div>
+  </div>
+
+  <script>
+    let tasks = [
+      { id: 1, title: "Buy groceries", completed: false },
+      { id: 2, title: "Read a book", completed: true },
+      { id: 3, title: "Pass a test  ", completed: false }
+    ];
+    let filter = 'all';
+
+    const taskList = document.getElementById('taskList');
+    const newTaskInput = document.getElementById('newTaskInput');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+
+      let filteredTasks = tasks;
+      if (filter === 'pending') filteredTasks = tasks.filter(t => !t.completed);
+      else if (filter === 'completed') filteredTasks = tasks.filter(t => t.completed);
+
+      filteredTasks.forEach(task => {
+        const taskDiv = document.createElement("div");
+        taskDiv.className = "task" + (task.completed ? " completed" : "");
+
+        const taskText = document.createElement("span");
+        taskText.textContent = task.title;
+
+        const completeBtn = document.createElement("button");
+        completeBtn.textContent = "Complete";
+        completeBtn.className = "complete-btn";
+        completeBtn.onclick = () => toggleComplete(task.id);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "delete-btn";
+        deleteBtn.onclick = () => deleteTask(task.id);
+
+        taskDiv.appendChild(taskText);
+        taskDiv.appendChild(completeBtn);
+        taskDiv.appendChild(deleteBtn);
+
+        taskList.appendChild(taskDiv);
+      });
+    }
+
+    function addTask() {
+      const title = newTaskInput.value.trim();
+      if (!title) {
+        errorMsg.textContent = "Task title must not be empty.";
+        return;
+      }
+      errorMsg.textContent = "";
+      tasks.push({ id: Date.now(), title, completed: false });
+      newTaskInput.value = "";
+      renderTasks();
+    }
+
+    function toggleComplete(id) {
+      tasks = tasks.map(task =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      );
+      renderTasks();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(task => task.id !== id);
+      renderTasks();
+    }
+
+    function setFilter(selected) {
+      filter = selected;
+      filterButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.filter === selected);
+      });
+      renderTasks();
+    }
+
+    addTaskBtn.addEventListener("click", addTask);
+    renderTasks();
+  </script>
+</body>
+</html>
